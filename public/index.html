@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Funtastic Weekend! 🎉</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap');
+
+  :root {
+    --yellow: #FFE135;
+    --pink:   #FF6B9D;
+    --teal:   #4ECDC4;
+    --orange: #FF8C42;
+    --purple: #A855F7;
+    --green:  #6BCB77;
+    --blue:   #4D9DE0;
+    --red:    #FF4757;
+    --cream:  #FFFDF0;
+    --dark:   #2D2D2D;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--cream);
+    font-family: 'Nunito', sans-serif;
+    color: var(--dark);
+    background-image:
+      radial-gradient(circle at 10% 20%, rgba(255,107,157,0.08) 0%, transparent 50%),
+      radial-gradient(circle at 90% 80%, rgba(78,205,196,0.08) 0%, transparent 50%);
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  header {
+    background: var(--yellow);
+    border-bottom: 4px solid var(--dark);
+    padding: 16px 20px;
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+  }
+  header::before {
+    content: '';
+    position: absolute;
+    bottom: -2px; left: 0; right: 0;
+    height: 10px;
+    background: repeating-linear-gradient(
+      90deg,
+      var(--pink) 0px, var(--pink) 30px,
+      var(--teal) 30px, var(--teal) 60px,
+      var(--orange) 60px, var(--orange) 90px,
+      var(--purple) 90px, var(--purple) 120px
+    );
+  }
+
+  .site-title {
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(2rem, 6vw, 4rem);
+    color: var(--dark);
+    letter-spacing: 2px;
+    text-shadow: 4px 4px 0 var(--pink), 6px 6px 0 rgba(0,0,0,0.1);
+    display: inline-block;
+    position: relative;
+    transform: rotate(-1deg);
+  }
+
+  .site-subtitle {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 1rem;
+    color: var(--dark);
+    margin-top: 4px;
+    opacity: 0.75;
+  }
+
+  /* ── Crayon SVG decorations ── */
+  .deco-strip {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 8px 20px;
+    background: white;
+    border-bottom: 3px dashed var(--yellow);
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .deco-strip svg { width: 60px; height: 60px; }
+
+  /* ── Controls bar ── */
+  .controls {
+    background: var(--pink);
+    border-bottom: 3px solid var(--dark);
+    padding: 12px 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .controls input, .controls select {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    border: 3px solid var(--dark);
+    border-radius: 12px;
+    padding: 7px 12px;
+    background: white;
+    outline: none;
+    box-shadow: 3px 3px 0 var(--dark);
+  }
+  .controls input:focus, .controls select:focus {
+    transform: translateY(-1px);
+    box-shadow: 4px 4px 0 var(--dark);
+  }
+
+  .btn {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1rem;
+    letter-spacing: 0.5px;
+    border: 3px solid var(--dark);
+    border-radius: 12px;
+    padding: 7px 16px;
+    cursor: pointer;
+    box-shadow: 3px 3px 0 var(--dark);
+    transition: transform 0.1s, box-shadow 0.1s;
+    text-decoration: none;
+    display: inline-block;
+  }
+  .btn:active { transform: translate(2px,2px); box-shadow: 1px 1px 0 var(--dark); }
+
+  .btn-yellow { background: var(--yellow); color: var(--dark); }
+  .btn-teal   { background: var(--teal);   color: var(--dark); }
+  .btn-orange { background: var(--orange); color: white; }
+  .btn-green  { background: var(--green);  color: var(--dark); }
+  .btn-red    { background: var(--red);    color: white; }
+  .btn-purple { background: var(--purple); color: white; }
+
+  .toggle-weekend {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1rem;
+    letter-spacing: 0.5px;
+    border: 3px solid var(--dark);
+    border-radius: 12px;
+    padding: 7px 16px;
+    cursor: pointer;
+    box-shadow: 3px 3px 0 var(--dark);
+    background: white;
+    color: var(--dark);
+    transition: all 0.15s;
+  }
+  .toggle-weekend.active {
+    background: var(--purple);
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 4px 4px 0 var(--dark);
+  }
+
+  /* ── Main layout ── */
+  .main-wrap {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 24px;
+  }
+  @media (max-width: 768px) {
+    .main-wrap { grid-template-columns: 1fr; }
+  }
+
+  /* ── Events list ── */
+  #events-count {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.4rem;
+    color: var(--purple);
+    margin-bottom: 16px;
+  }
+
+  #events-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .event-card {
+    background: white;
+    border: 3px solid var(--dark);
+    border-radius: 18px;
+    padding: 16px 18px;
+    box-shadow: 5px 5px 0 var(--dark);
+    position: relative;
+    transition: transform 0.15s;
+    overflow: hidden;
+  }
+  .event-card:hover { transform: translateY(-2px); }
+
+  .event-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 8px; height: 100%;
+    background: var(--stripe-color, var(--teal));
+    border-radius: 16px 0 0 16px;
+  }
+
+  .event-card[data-source="Ronnies Awesome List"] { --stripe-color: var(--pink); }
+  .event-card[data-source="Marin Mommies"]        { --stripe-color: var(--purple); }
+  .event-card[data-source="SF Funcheap"]           { --stripe-color: var(--orange); }
+  .event-card[data-source="510 Families"]          { --stripe-color: var(--green); }
+  .event-card[data-source="SFPL Kids Events"]      { --stripe-color: var(--blue); }
+  .event-card[data-source="Manual"]                { --stripe-color: var(--yellow); }
+  .event-card[data-source="DSE Runners"]           { --stripe-color: var(--red); }
+
+  .event-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-left: 10px;
+  }
+
+  .event-title {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.15rem;
+    color: var(--dark);
+    line-height: 1.2;
+    flex: 1;
+  }
+  .event-title a {
+    color: inherit;
+    text-decoration: none;
+  }
+  .event-title a:hover { text-decoration: underline wavy var(--pink); }
+
+  .event-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 8px 0 6px 10px;
+  }
+  .tag {
+    font-size: 0.72rem;
+    font-weight: 800;
+    border: 2px solid var(--dark);
+    border-radius: 20px;
+    padding: 2px 10px;
+    display: inline-block;
+  }
+  .tag-date     { background: var(--yellow); }
+  .tag-location { background: var(--teal);   }
+  .tag-region   { background: var(--blue); color: white; }
+  .tag-source   { background: var(--pink);   }
+  .tag-category { background: var(--green);  }
+
+  .event-desc {
+    font-size: 0.85rem;
+    line-height: 1.5;
+    color: #555;
+    margin: 6px 0 0 10px;
+  }
+
+  .event-actions {
+    position: absolute;
+    top: 10px; right: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn-gcal {
+    font-size: 0.72rem;
+    text-decoration: none;
+    background: #f0f4ff;
+    color: #3b5bdb;
+    border: 1px solid #c5d0f5;
+    border-radius: 4px;
+    padding: 3px 8px;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .event-card:hover .btn-gcal { opacity: 1; }
+  .btn-gcal:hover { background: #dce4ff; }
+  .btn-delete {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2rem;
+    opacity: 0.4;
+    transition: opacity 0.15s;
+    padding: 2px 6px;
+  }
+  .btn-delete:hover { opacity: 1; }
+
+  /* ── Sidebar ── */
+  .sidebar { display: flex; flex-direction: column; gap: 20px; }
+
+  .sidebar-card {
+    background: white;
+    border: 3px solid var(--dark);
+    border-radius: 18px;
+    padding: 18px;
+    box-shadow: 5px 5px 0 var(--dark);
+  }
+
+  .sidebar-card h3 {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.3rem;
+    margin-bottom: 14px;
+    color: var(--dark);
+  }
+
+  /* Add event form */
+  .form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 10px;
+  }
+  .form-field label {
+    font-size: 0.8rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--dark);
+  }
+  .form-field input, .form-field textarea, .form-field select {
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.88rem;
+    border: 2.5px solid var(--dark);
+    border-radius: 10px;
+    padding: 6px 10px;
+    outline: none;
+    background: var(--cream);
+  }
+  .form-field input:focus, .form-field textarea:focus {
+    background: white;
+    box-shadow: 2px 2px 0 var(--purple);
+  }
+  .form-field textarea { resize: vertical; min-height: 60px; }
+
+  /* Sources legend */
+  .source-legend { display: flex; flex-direction: column; gap: 8px; }
+  .source-item {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 0.85rem; font-weight: 700;
+  }
+  .source-dot {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    border: 2px solid var(--dark);
+    flex-shrink: 0;
+  }
+
+  /* Last scraped */
+  #last-scraped {
+    font-size: 0.78rem;
+    color: #888;
+    text-align: center;
+    margin-top: 6px;
+  }
+
+  /* Loading / empty states */
+  .loading {
+    text-align: center;
+    padding: 40px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.5rem;
+    color: var(--pink);
+  }
+  .no-events {
+    text-align: center;
+    padding: 40px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.3rem;
+    color: #aaa;
+  }
+
+  /* Date group header */
+  .date-group-header {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1rem;
+    color: white;
+    background: var(--dark);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 6px 4px 14px;
+    border-radius: 20px;
+    margin: 8px 0 4px;
+  }
+  .date-next-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-family: 'Fredoka One', cursive;
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 0 6px;
+    opacity: 0.7;
+    line-height: 1;
+    transition: opacity 0.15s;
+  }
+  .date-next-btn:hover { opacity: 1; }
+
+  /* Toast */
+  #toast {
+    position: fixed;
+    bottom: 24px; right: 24px;
+    background: var(--dark);
+    color: white;
+    font-family: 'Fredoka One', cursive;
+    font-size: 1rem;
+    padding: 12px 20px;
+    border-radius: 14px;
+    border: 3px solid var(--yellow);
+    box-shadow: 4px 4px 0 var(--yellow);
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.3s;
+    z-index: 9999;
+    pointer-events: none;
+  }
+  #toast.show { opacity: 1; transform: translateY(0); }
+
+</style>
+</head>
+<body>
+
+<!-- ── Header ── -->
+<header>
+  <div style="display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;">
+    <!-- Crayon kid SVG left -->
+    <svg width="70" height="90" viewBox="0 0 70 90" fill="none" xmlns="http://www.w3.org/2000/svg" style="transform:scaleX(-1)">
+      <!-- body -->
+      <ellipse cx="35" cy="55" rx="14" ry="18" fill="#FF6B9D" stroke="#2D2D2D" stroke-width="2.5"/>
+      <!-- head -->
+      <circle cx="35" cy="28" r="14" fill="#FFD699" stroke="#2D2D2D" stroke-width="2.5"/>
+      <!-- hair -->
+      <path d="M21 22 Q35 10 49 22" fill="#FF8C42" stroke="#2D2D2D" stroke-width="2"/>
+      <!-- eyes -->
+      <circle cx="30" cy="26" r="2.5" fill="#2D2D2D"/>
+      <circle cx="40" cy="26" r="2.5" fill="#2D2D2D"/>
+      <!-- smile -->
+      <path d="M29 33 Q35 38 41 33" stroke="#2D2D2D" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <!-- arms -->
+      <line x1="21" y1="52" x2="8" y2="62" stroke="#FFD699" stroke-width="5" stroke-linecap="round"/>
+      <line x1="49" y1="52" x2="62" y2="58" stroke="#FFD699" stroke-width="5" stroke-linecap="round"/>
+      <!-- legs -->
+      <line x1="29" y1="72" x2="24" y2="88" stroke="#4ECDC4" stroke-width="5" stroke-linecap="round"/>
+      <line x1="41" y1="72" x2="46" y2="88" stroke="#4ECDC4" stroke-width="5" stroke-linecap="round"/>
+      <!-- balloon -->
+      <circle cx="8" cy="50" r="8" fill="#A855F7" stroke="#2D2D2D" stroke-width="2"/>
+      <line x1="8" y1="58" x2="8" y2="62" stroke="#2D2D2D" stroke-width="1.5"/>
+    </svg>
+
+    <div>
+      <div class="site-title">🎉 Funtastic Weekend! 🎉</div>
+      <div class="site-subtitle">What can Aina do this weekend?</div>
+    </div>
+
+    <!-- Sun SVG right -->
+    <svg width="70" height="80" viewBox="0 0 70 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- sun rays -->
+      <line x1="35" y1="5"  x2="35" y2="15" stroke="#FF8C42" stroke-width="3" stroke-linecap="round"/>
+      <line x1="35" y1="55" x2="35" y2="65" stroke="#FF8C42" stroke-width="3" stroke-linecap="round"/>
+      <line x1="5"  y1="35" x2="15" y2="35" stroke="#FF8C42" stroke-width="3" stroke-linecap="round"/>
+      <line x1="55" y1="35" x2="65" y2="35" stroke="#FF8C42" stroke-width="3" stroke-linecap="round"/>
+      <line x1="12" y1="12" x2="19" y2="19" stroke="#FF8C42" stroke-width="3" stroke-linecap="round"/>
+      <line x1="51" y1="51" x2="58" y2="58" stroke="#FF8C42" stroke-width="3" stroke-linecap="round"/>
+      <line x1="58" y1="12" x2="51" y2="19" stroke="#FF8C42" stroke-width="3" stroke-linecap="round"/>
+      <line x1="19" y1="51" x2="12" y2="58" stroke="#FF8C42" stroke-width="3" stroke-linecap="round"/>
+      <!-- sun face -->
+      <circle cx="35" cy="35" r="16" fill="#FFE135" stroke="#2D2D2D" stroke-width="2.5"/>
+      <circle cx="29" cy="33" r="2.2" fill="#2D2D2D"/>
+      <circle cx="41" cy="33" r="2.2" fill="#2D2D2D"/>
+      <path d="M28 40 Q35 46 42 40" stroke="#2D2D2D" stroke-width="2" fill="none" stroke-linecap="round"/>
+    </svg>
+  </div>
+</header>
+
+<!-- ── Crayon deco strip ── -->
+<div class="deco-strip">
+  <!-- star -->
+  <svg viewBox="0 0 60 60"><path d="M30 5 L36 22 L54 22 L40 33 L45 50 L30 40 L15 50 L20 33 L6 22 L24 22 Z" fill="#FFE135" stroke="#2D2D2D" stroke-width="2" stroke-linejoin="round"/></svg>
+  <!-- butterfly -->
+  <svg viewBox="0 0 60 60"><ellipse cx="20" cy="25" rx="14" ry="10" fill="#FF6B9D" stroke="#2D2D2D" stroke-width="2" transform="rotate(-20 20 25)"/><ellipse cx="40" cy="25" rx="14" ry="10" fill="#A855F7" stroke="#2D2D2D" stroke-width="2" transform="rotate(20 40 25)"/><ellipse cx="22" cy="38" rx="9" ry="7" fill="#FF8C42" stroke="#2D2D2D" stroke-width="2" transform="rotate(20 22 38)"/><ellipse cx="38" cy="38" rx="9" ry="7" fill="#4ECDC4" stroke="#2D2D2D" stroke-width="2" transform="rotate(-20 38 38)"/><line x1="30" y1="20" x2="30" y2="45" stroke="#2D2D2D" stroke-width="2.5" stroke-linecap="round"/><circle cx="30" cy="30" r="3" fill="#2D2D2D"/></svg>
+  <!-- flower -->
+  <svg viewBox="0 0 60 60"><circle cx="30" cy="20" r="7" fill="#FF6B9D" stroke="#2D2D2D" stroke-width="1.5"/><circle cx="44" cy="28" r="7" fill="#FF8C42" stroke="#2D2D2D" stroke-width="1.5"/><circle cx="40" cy="43" r="7" fill="#A855F7" stroke="#2D2D2D" stroke-width="1.5"/><circle cx="20" cy="43" r="7" fill="#4ECDC4" stroke="#2D2D2D" stroke-width="1.5"/><circle cx="16" cy="28" r="7" fill="#FFE135" stroke="#2D2D2D" stroke-width="1.5"/><circle cx="30" cy="30" r="9" fill="#FFE135" stroke="#2D2D2D" stroke-width="2"/><line x1="30" y1="39" x2="30" y2="58" stroke="#6BCB77" stroke-width="3" stroke-linecap="round"/></svg>
+  <!-- kite -->
+  <svg viewBox="0 0 60 60"><path d="M30 5 L50 30 L30 48 L10 30 Z" fill="#4ECDC4" stroke="#2D2D2D" stroke-width="2" stroke-linejoin="round"/><line x1="30" y1="5"  x2="30" y2="48" stroke="#2D2D2D" stroke-width="1.5"/><line x1="10" y1="30" x2="50" y2="30" stroke="#2D2D2D" stroke-width="1.5"/><path d="M30 48 Q35 52 32 56 Q28 60 30 55" stroke="#FF6B9D" stroke-width="2" fill="none"/></svg>
+  <!-- rainbow -->
+  <svg viewBox="0 0 60 60"><path d="M5 45 Q5 10 55 10 L55 16 Q14 16 14 45 Z" fill="#FF6B9D" stroke="none"/><path d="M5 45 Q5 10 55 10" stroke="#FF4757" stroke-width="4" fill="none"/><path d="M11 45 Q11 16 55 16" stroke="#FF8C42" stroke-width="4" fill="none"/><path d="M18 45 Q18 22 55 22" stroke="#FFE135" stroke-width="4" fill="none"/><path d="M25 45 Q25 28 55 28" stroke="#6BCB77" stroke-width="4" fill="none"/><path d="M32 45 Q32 34 55 34" stroke="#4D9DE0" stroke-width="4" fill="none"/><path d="M39 45 Q39 40 55 40" stroke="#A855F7" stroke-width="4" fill="none"/></svg>
+  <!-- jumping kid -->
+  <svg viewBox="0 0 60 80"><circle cx="30" cy="15" r="10" fill="#FFD699" stroke="#2D2D2D" stroke-width="2"/><ellipse cx="30" cy="35" rx="9" ry="12" fill="#FF6B9D" stroke="#2D2D2D" stroke-width="2"/><line x1="21" y1="32" x2="8"  y2="22" stroke="#FFD699" stroke-width="4" stroke-linecap="round"/><line x1="39" y1="32" x2="52" y2="22" stroke="#FFD699" stroke-width="4" stroke-linecap="round"/><line x1="24" y1="46" x2="16" y2="62" stroke="#4ECDC4" stroke-width="4" stroke-linecap="round"/><line x1="36" y1="46" x2="44" y2="62" stroke="#4ECDC4" stroke-width="4" stroke-linecap="round"/><circle cx="26" cy="13" r="2" fill="#2D2D2D"/><circle cx="34" cy="13" r="2" fill="#2D2D2D"/><path d="M25 19 Q30 23 35 19" stroke="#2D2D2D" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+</div>
+
+<!-- ── Controls ── -->
+<div class="controls">
+  <input type="text" id="search-input" placeholder="🔍 Search events…" style="min-width:200px"/>
+  <input type="date" id="date-filter" title="Filter by date"/>
+  <button class="toggle-weekend" id="weekend-toggle" onclick="toggleWeekend()">📅 Weekends Only</button>
+  <select id="region-filter">
+    <option value="">📍 All Areas</option>
+    <option value="San Francisco">🌉 San Francisco</option>
+    <option value="North Bay">🌲 North Bay</option>
+    <option value="East Bay">🏔️ East Bay</option>
+    <option value="Peninsula">🌊 Peninsula</option>
+    <option value="South Bay">☀️ South Bay</option>
+  </select>
+  <select id="source-filter">
+    <option value="">All Sources</option>
+    <option value="Ronnies Awesome List">Ronnie's List</option>
+    <option value="Marin Mommies">Marin Mommies</option>
+    <option value="SF Funcheap">SF Funcheap</option>
+    <option value="510 Families">510 Families</option>
+    <option value="SFPL Kids Events">SFPL Kids</option>
+    <option value="Manual">My Events</option>
+    <option value="DSE Runners">DSE Runners</option>
+  </select>
+  <button class="btn btn-teal" onclick="loadEvents()">🔄 Refresh</button>
+  <button class="btn btn-orange" onclick="triggerScrape()">🕷️ Re-scrape</button>
+</div>
+
+<!-- ── Main ── -->
+<div class="main-wrap">
+  <!-- Events column -->
+  <div>
+    <div id="events-count"></div>
+    <div id="events-list"><div class="loading">Loading fun events… 🎈</div></div>
+  </div>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <!-- Add Event -->
+    <div class="sidebar-card" style="border-top:6px solid var(--green)">
+      <h3>✏️ Add an Event</h3>
+      <form id="add-form" onsubmit="addEvent(event)">
+        <div class="form-field">
+          <label>Event URL *</label>
+          <input type="url" id="f-url" placeholder="https://…" required/>
+        </div>
+        <button type="submit" class="btn btn-green" style="width:100%" id="add-btn">🎉 Add Event!</button>
+      </form>
+    </div>
+
+    <!-- Sources legend -->
+    <div class="sidebar-card" style="border-top:6px solid var(--blue)">
+      <h3>🗂️ Sources</h3>
+      <div class="source-legend">
+        <div class="source-item"><div class="source-dot" style="background:var(--pink)"></div> <a href="https://www.ronniesawesomelist.com/" target="_blank" rel="noopener">Ronnie's Awesome List</a></div>
+        <div class="source-item"><div class="source-dot" style="background:var(--purple)"></div> <a href="https://www.marinmommies.com/calendar" target="_blank" rel="noopener">Marin Mommies</a></div>
+        <div class="source-item"><div class="source-dot" style="background:var(--orange)"></div> <a href="https://sf.funcheap.com/category/event/event-types/kids-families/" target="_blank" rel="noopener">SF Funcheap</a></div>
+        <div class="source-item"><div class="source-dot" style="background:var(--green)"></div> <a href="https://www.510families.com/calendar/" target="_blank" rel="noopener">510 Families</a></div>
+        <div class="source-item"><div class="source-dot" style="background:var(--blue)"></div> <a href="https://sfpl.org/kids/events/calendar/" target="_blank" rel="noopener">SFPL Kids Events</a></div>
+        <div class="source-item"><div class="source-dot" style="background:var(--red)"></div> <a href="https://dserunners.com/race-schedule/" target="_blank" rel="noopener">DSE Runners</a></div>
+      </div>
+      <p id="last-scraped"></p>
+    </div>
+
+    <!-- Mascot card -->
+    <div class="sidebar-card" style="border-top:6px solid var(--yellow);text-align:center">
+      <svg width="120" height="140" viewBox="0 0 120 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- ground -->
+        <path d="M10 130 Q60 120 110 130" stroke="#6BCB77" stroke-width="4" fill="none" stroke-linecap="round"/>
+        <!-- tree -->
+        <line x1="90" y1="130" x2="90" y2="95" stroke="#FF8C42" stroke-width="4" stroke-linecap="round"/>
+        <ellipse cx="90" cy="85" rx="16" ry="20" fill="#6BCB77" stroke="#2D2D2D" stroke-width="2"/>
+        <!-- dog body -->
+        <ellipse cx="30" cy="112" rx="18" ry="11" fill="#FFD699" stroke="#2D2D2D" stroke-width="2"/>
+        <!-- dog head -->
+        <circle cx="46" cy="103" r="11" fill="#FFD699" stroke="#2D2D2D" stroke-width="2"/>
+        <!-- dog ears -->
+        <ellipse cx="40" cy="95" rx="5" ry="8" fill="#FF8C42" stroke="#2D2D2D" stroke-width="1.5" transform="rotate(-15 40 95)"/>
+        <ellipse cx="52" cy="95" rx="5" ry="8" fill="#FF8C42" stroke="#2D2D2D" stroke-width="1.5" transform="rotate(15 52 95)"/>
+        <!-- dog eyes + nose -->
+        <circle cx="43" cy="102" r="2" fill="#2D2D2D"/>
+        <circle cx="50" cy="102" r="2" fill="#2D2D2D"/>
+        <ellipse cx="46" cy="107" rx="3" ry="2" fill="#FF6B9D"/>
+        <!-- dog legs -->
+        <line x1="20" y1="122" x2="18" y2="134" stroke="#FFD699" stroke-width="4" stroke-linecap="round"/>
+        <line x1="28" y1="122" x2="27" y2="134" stroke="#FFD699" stroke-width="4" stroke-linecap="round"/>
+        <line x1="36" y1="122" x2="37" y2="134" stroke="#FFD699" stroke-width="4" stroke-linecap="round"/>
+        <line x1="44" y1="118" x2="46" y2="130" stroke="#FFD699" stroke-width="4" stroke-linecap="round"/>
+        <!-- tail wag -->
+        <path d="M12 112 Q5 100 10 95" stroke="#FF8C42" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <!-- kid on left -->
+        <circle cx="65" cy="88" r="11" fill="#FFD699" stroke="#2D2D2D" stroke-width="2"/>
+        <path d="M54 84 Q65 74 76 84" fill="#A855F7" stroke="#2D2D2D" stroke-width="1.5"/>
+        <circle cx="61" cy="87" r="2" fill="#2D2D2D"/>
+        <circle cx="69" cy="87" r="2" fill="#2D2D2D"/>
+        <path d="M60 93 Q65 97 70 93" stroke="#2D2D2D" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <ellipse cx="65" cy="108" rx="10" ry="13" fill="#4ECDC4" stroke="#2D2D2D" stroke-width="2"/>
+        <line x1="55" y1="106" x2="44" y2="116" stroke="#FFD699" stroke-width="4" stroke-linecap="round"/>
+        <line x1="75" y1="106" x2="86" y2="116" stroke="#FFD699" stroke-width="4" stroke-linecap="round"/>
+        <line x1="59" y1="120" x2="55" y2="134" stroke="#FF8C42" stroke-width="4" stroke-linecap="round"/>
+        <line x1="71" y1="120" x2="75" y2="134" stroke="#FF8C42" stroke-width="4" stroke-linecap="round"/>
+        <!-- balloon from kid -->
+        <circle cx="86" cy="108" r="9" fill="#FF4757" stroke="#2D2D2D" stroke-width="1.5"/>
+        <line x1="86" y1="117" x2="86" y2="121" stroke="#2D2D2D" stroke-width="1.5"/>
+      </svg>
+      <p style="font-family:'Fredoka One',cursive;font-size:0.95rem;color:var(--purple);margin-top:8px">Have fun out there! 🌈</p>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+const API = '';
+let weekendOnly = false;
+
+async function loadEvents() {
+  const params = new URLSearchParams();
+  const q = document.getElementById('search-input').value.trim();
+  const date = document.getElementById('date-filter').value;
+  const source = document.getElementById('source-filter').value;
+  const region = document.getElementById('region-filter').value;
+  if (q) params.set('q', q);
+  if (date) params.set('date', date);
+  if (source) params.set('source', source);
+  if (region) params.set('region', region);
+  if (weekendOnly) params.set('weekend', 'true');
+
+  document.getElementById('events-list').innerHTML = '<div class="loading">Loading fun… 🎈</div>';
+
+  try {
+    const res = await fetch(`/api/events?${params}`);
+    const { events, lastScraped } = await res.json();
+    renderEvents(events);
+    if (lastScraped) {
+      document.getElementById('last-scraped').textContent =
+        'Last updated: ' + new Date(lastScraped).toLocaleString();
+    }
+  } catch (e) {
+    document.getElementById('events-list').innerHTML = '<div class="no-events">Oops! Could not load events 😢</div>';
+  }
+}
+
+function renderEvents(events) {
+  const countEl = document.getElementById('events-count');
+  const listEl  = document.getElementById('events-list');
+  countEl.textContent = `🎡 ${events.length} event${events.length !== 1 ? 's' : ''} found!`;
+
+  if (!events.length) {
+    listEl.innerHTML = '<div class="no-events">No events found! Try different filters 🔍</div>';
+    return;
+  }
+
+  // Group by date
+  const groups = {};
+  const noDate = [];
+  events.forEach(ev => {
+    if (ev.date) { (groups[ev.date] = groups[ev.date] || []).push(ev); }
+    else noDate.push(ev);
+  });
+
+  const html = [];
+  const sortedDates = Object.keys(groups).sort();
+  sortedDates.forEach(d => {
+    const label = formatDateHeader(d);
+    const nextBtn = `<button class="date-next-btn" onclick="nextDay('${d}')" title="Next day">▶</button>`;
+    html.push(`<div class="date-group-header"><span>📅 ${label}</span>${nextBtn}</div>`);
+    groups[d].forEach(ev => html.push(eventCard(ev)));
+  });
+  if (noDate.length) {
+    html.push('<div class="date-group-header">📌 Date TBD</div>');
+    noDate.forEach(ev => html.push(eventCard(ev)));
+  }
+  listEl.innerHTML = html.join('');
+}
+
+function formatDateHeader(iso) {
+  const d = new Date(iso + 'T12:00:00');
+  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${days[d.getDay()]}, ${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+}
+
+function eventCard(ev) {
+  const title = ev.url
+    ? `<a href="${escHtml(ev.url)}" target="_blank" rel="noopener">${escHtml(ev.title)}</a>`
+    : escHtml(ev.title);
+  const REGION_EMOJI = {'San Francisco':'🌉','North Bay':'🌲','East Bay':'🏔️','Peninsula':'🌊','South Bay':'☀️'};
+  const dateBadge   = ev.date    ? `<span class="tag tag-date">📅 ${ev.date}</span>` : '';
+  const locBadge    = ev.location? `<span class="tag tag-location">📍 ${escHtml(ev.location)}</span>` : '';
+  const regionBadge = ev.region  ? `<span class="tag tag-region">${REGION_EMOJI[ev.region] || '📌'} ${escHtml(ev.region)}</span>` : '';
+  const srcBadge    = `<span class="tag tag-source">🔗 ${escHtml(ev.source)}</span>`;
+  const desc       = ev.description ? `<div class="event-desc">${escHtml(ev.description)}</div>` : '';
+  const gcalUrl    = buildGcalUrl(ev);
+  return `
+    <div class="event-card" data-source="${escHtml(ev.source)}">
+      <div class="event-header">
+        <div class="event-title">${title}</div>
+      </div>
+      <div class="event-meta">${dateBadge}${regionBadge}${locBadge}${srcBadge}</div>
+      ${desc}
+      <div class="event-actions">
+        <a class="btn-gcal" href="${gcalUrl}" target="_blank" rel="noopener" title="Add to Google Calendar">📅 Add to Calendar</a>
+        <button class="btn-delete" onclick="deleteEvent('${ev.id}')" title="Remove">✕</button>
+      </div>
+    </div>`;
+}
+
+function buildGcalUrl(ev) {
+  const base = 'https://calendar.google.com/calendar/render?action=TEMPLATE';
+  const text = encodeURIComponent(ev.title || '');
+  const details = encodeURIComponent((ev.description || '') + (ev.url ? '\n' + ev.url : ''));
+  const location = encodeURIComponent(ev.location || '');
+  // Google Calendar uses YYYYMMDD for all-day events
+  const date = ev.date ? ev.date.replace(/-/g, '') : '';
+  const dates = date ? `${date}/${date}` : '';
+  return `${base}&text=${text}&details=${details}&location=${location}${dates ? '&dates=' + dates : ''}`;
+}
+
+function escHtml(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+async function deleteEvent(id) {
+  if (!confirm('Remove this event?')) return;
+  await fetch(`/api/events/${id}`, { method: 'DELETE' });
+  toast('Event removed!');
+  loadEvents();
+}
+
+async function addEvent(e) {
+  e.preventDefault();
+  const url = document.getElementById('f-url').value.trim();
+  const btn = document.getElementById('add-btn');
+  btn.disabled = true;
+  btn.textContent = 'Fetching…';
+  try {
+    const res = await fetch('/api/scrape-url', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      document.getElementById('add-form').reset();
+      toast(`🎉 Added: ${data.title}`);
+      loadEvents();
+    } else {
+      toast(data.error || 'Could not add event 😢');
+    }
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🎉 Add Event!';
+  }
+}
+
+async function triggerScrape() {
+  toast('Scraping sources… this may take a minute 🕷️');
+  const res = await fetch('/api/scrape', { method: 'POST' });
+  const { count } = await res.json();
+  toast(`Scraped ${count} events! 🎉`);
+  loadEvents();
+}
+
+function nextDay(iso) {
+  const d = new Date(iso + 'T12:00:00');
+  d.setDate(d.getDate() + 1);
+  document.getElementById('date-filter').value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  loadEvents();
+}
+
+function toggleWeekend() {
+  weekendOnly = !weekendOnly;
+  document.getElementById('weekend-toggle').classList.toggle('active', weekendOnly);
+  loadEvents();
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// Live search
+let debounce;
+document.getElementById('search-input').addEventListener('input', () => {
+  clearTimeout(debounce);
+  debounce = setTimeout(loadEvents, 400);
+});
+document.getElementById('date-filter').addEventListener('change', loadEvents);
+document.getElementById('region-filter').addEventListener('change', loadEvents);
+document.getElementById('source-filter').addEventListener('change', loadEvents);
+
+// Initial load
+const _now = new Date();
+document.getElementById('date-filter').value = `${_now.getFullYear()}-${String(_now.getMonth()+1).padStart(2,'0')}-${String(_now.getDate()).padStart(2,'0')}`;
+loadEvents();
+</script>
+</body>
+</html>
