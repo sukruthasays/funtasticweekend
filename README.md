@@ -53,11 +53,3 @@ Open [http://localhost:3000](http://localhost:3000).
 |---|---|---|
 | `DATABASE_URL` | PostgreSQL connection string | local `funtasticweekend` db |
 | `PORT` | Port to listen on | `3000` |
-
-## Deploying to Railway
-
-1. Push this repo to GitHub
-2. Create a new project on [railway.app](https://railway.app) from the GitHub repo
-3. Add a **Postgres** plugin — Railway sets `DATABASE_URL` automatically
-4. In the Railway shell, run `node migrate.js` once to seed the database from any existing `events.json`, or let the scraper populate it on first boot
-5. Deploy — Railway detects Node.js and runs `npm start`
