@@ -897,8 +897,12 @@ app.get('/api/events', async (req, res) => {
     const today = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
 
     const { date, weekend, source, region, q } = req.query;
-    const params = [today];
-    const conditions = ['(date IS NULL OR date >= $1)'];
+
+    // When a specific date is selected, fetch all events for that date (including past ones)
+    // so the frontend can split them into upcoming vs past. Otherwise only show today+.
+    const dateFilterActive = !!date;
+    const params = dateFilterActive ? [] : [today];
+    const conditions = dateFilterActive ? [] : ['(date IS NULL OR date >= $1)'];
 
     if (q) {
       params.push(`%${q.toLowerCase()}%`);
@@ -912,14 +916,15 @@ app.get('/api/events', async (req, res) => {
       conditions.push(`EXTRACT(DOW FROM date) IN (0, 6)`);
     }
 
+    const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
     const sql = `SELECT id, source, title, url, description, date_text AS "dateText",
                         TO_CHAR(date, 'YYYY-MM-DD') AS date, location, region, category, is_manual AS manual
                  FROM events
-                 WHERE ${conditions.join(' AND ')}
+                 ${whereClause}
                  ORDER BY date ASC NULLS LAST, title ASC`;
 
     const { rows } = await db.query(sql, params);
-    res.json({ events: rows, lastScraped });
+    res.json({ events: rows, lastScraped, today });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Database error' });

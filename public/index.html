@@ -736,7 +736,7 @@ async function loadEvents() {
 
   try {
     const res = await fetch(`/api/events?${params}`);
-    const { events, lastScraped } = await res.json();
+    const { events, lastScraped, today } = await res.json();
 
     let nextEvent = null;
     const date = document.getElementById('date-filter').value;
@@ -747,7 +747,7 @@ async function loadEvents() {
       nextEvent = nextEvents[0] || null;
     }
 
-    renderEvents(events, nextEvent);
+    renderEvents(events, nextEvent, today);
     if (lastScraped) {
       document.getElementById('last-scraped').textContent =
         'Last updated: ' + new Date(lastScraped).toLocaleString();
@@ -757,44 +757,58 @@ async function loadEvents() {
   }
 }
 
-function renderEvents(events, nextEvent) {
+function renderEvents(events, nextEvent, today) {
   const countEl = document.getElementById('events-count');
   const listEl  = document.getElementById('events-list');
-  countEl.textContent = `🎡 ${events.length} event${events.length !== 1 ? 's' : ''} found!`;
 
-  if (!events.length) {
+  const selectedDate = document.getElementById('date-filter').value;
+  const upcoming = events.filter(ev => !ev.date || !today || ev.date >= today);
+  const past     = events.filter(ev => ev.date && today && ev.date < today);
+
+  countEl.textContent = `🎡 ${upcoming.length} upcoming event${upcoming.length !== 1 ? 's' : ''} found!`;
+
+  if (!upcoming.length && !past.length) {
     if (nextEvent) {
       const label = nextEvent.date ? formatDateHeader(nextEvent.date) : 'an upcoming date';
-      listEl.innerHTML = `<div class="no-events">No events found on the selected date.<br>
+      listEl.innerHTML = `<div class="no-events">No upcoming events found on the selected date.<br>
         <a href="#" onclick="jumpToEvent(event, '${escHtml(nextEvent.date)}', '${escHtml(nextEvent.id)}')" style="color:var(--sky-deep);font-size:0.95rem">
           Jump to next available: ${escHtml(nextEvent.title)} — ${label}
         </a></div>`;
     } else {
-      listEl.innerHTML = '<div class="no-events">No events found! Try different filters 🔍</div>';
+      listEl.innerHTML = '<div class="no-events">No upcoming events found! Try different filters 🔍</div>';
     }
     return;
   }
 
-  // Group by date
-  const groups = {};
-  const noDate = [];
-  events.forEach(ev => {
-    if (ev.date) { (groups[ev.date] = groups[ev.date] || []).push(ev); }
-    else noDate.push(ev);
-  });
-
   const html = [];
-  const sortedDates = Object.keys(groups).sort();
-  sortedDates.forEach(d => {
-    const label = formatDateHeader(d);
-    const nextBtn = `<button class="date-next-btn" onclick="nextDay('${d}')" title="Next day">▶</button>`;
-    html.push(`<div class="date-group-header"><span>📅 ${label}</span>${nextBtn}</div>`);
-    groups[d].forEach(ev => html.push(eventCard(ev)));
-  });
-  if (noDate.length) {
-    html.push('<div class="date-group-header">📌 Date TBD</div>');
-    noDate.forEach(ev => html.push(eventCard(ev)));
+
+  function renderGroup(evList) {
+    const groups = {};
+    const noDate = [];
+    evList.forEach(ev => {
+      if (ev.date) { (groups[ev.date] = groups[ev.date] || []).push(ev); }
+      else noDate.push(ev);
+    });
+    const sortedDates = Object.keys(groups).sort();
+    sortedDates.forEach(d => {
+      const label = formatDateHeader(d);
+      const nextBtn = `<button class="date-next-btn" onclick="nextDay('${d}')" title="Next day">▶</button>`;
+      html.push(`<div class="date-group-header"><span>📅 ${label}</span>${nextBtn}</div>`);
+      groups[d].forEach(ev => html.push(eventCard(ev)));
+    });
+    if (noDate.length) {
+      html.push('<div class="date-group-header">📌 Date TBD</div>');
+      noDate.forEach(ev => html.push(eventCard(ev)));
+    }
   }
+
+  renderGroup(upcoming);
+
+  if (past.length) {
+    html.push(`<div class="date-group-header" style="opacity:0.55;margin-top:20px"><span>🕐 Past Events</span></div>`);
+    renderGroup(past);
+  }
+
   listEl.innerHTML = html.join('');
   filterBySources();
 }
