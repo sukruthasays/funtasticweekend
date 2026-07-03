@@ -928,7 +928,7 @@ app.get('/api/events', async (req, res) => {
                  ORDER BY date ASC NULLS LAST, title ASC`;
 
     const { rows } = await db.query(sql, params);
-    res.json({ events: rows, lastScraped });
+    res.json({ events: rows.filter(e => !/canceled/i.test(e.title)), lastScraped });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Database error' });
