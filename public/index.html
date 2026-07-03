@@ -169,7 +169,6 @@
     .controls input, .controls select { font-size: 0.85rem; padding: 6px 10px; }
     .event-card { padding: 12px 14px; }
     .tag { font-size: 0.68rem; padding: 2px 8px; }
-    .btn-gcal { opacity: 1; }
   }
 
   /* ── Events list ── */
@@ -269,41 +268,19 @@
     margin: 6px 0 0 12px;
   }
 
-  .event-actions {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin: 8px 0 0 12px;
-  }
-  .btn-gcal {
-    font-size: 0.72rem;
-    text-decoration: none;
-    background: rgba(136,196,225,0.18);
-    color: var(--ink);
-    border: 1px solid rgba(136,196,225,0.45);
-    border-radius: 12px;
-    padding: 3px 8px;
-    white-space: nowrap;
-    opacity: 0;
-    transition: opacity 0.15s;
-  }
-  .event-card:hover .btn-gcal { opacity: 1; }
-  .btn-gcal:hover { background: rgba(136,196,225,0.35); }
   .btn-delete {
+    position: absolute;
+    top: 10px; right: 10px;
     background: none;
     border: none;
     cursor: pointer;
-    font-size: 1.15rem;
-    opacity: 0.28;
+    font-size: 1rem;
+    opacity: 0.25;
     transition: opacity 0.15s;
     padding: 2px 6px;
     color: var(--ink);
   }
-  .btn-delete:hover { opacity: 0.75; }
-
-  @media (hover: none) {
-    .btn-gcal { opacity: 1; }
-  }
+  .btn-delete:hover { opacity: 0.7; }
 
   /* ── Sidebar ── */
   .sidebar { display: flex; flex-direction: column; gap: 20px; }
@@ -821,13 +798,15 @@ function eventCard(ev) {
     ? `<a href="${escHtml(ev.url)}" target="_blank" rel="noopener">${escHtml(ev.title)}</a>`
     : escHtml(ev.title);
   const REGION_EMOJI = {'San Francisco':'🌉','North Bay':'🌲','East Bay':'🏔️','Peninsula':'🌊','South Bay':'☀️'};
-  const dateBadge   = ev.date    ? `<span class="tag tag-date">📅 ${ev.date}</span>` : '';
+  const gcalUrl     = buildGcalUrl(ev);
+  const dateBadge   = ev.date
+    ? `<a href="${escHtml(gcalUrl)}" target="_blank" rel="noopener" title="Add to Google Calendar" style="text-decoration:none"><span class="tag tag-date">📅 ${ev.date}</span></a>`
+    : '';
   const mapsUrl     = ev.location ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ev.location)}` : null;
   const locBadge    = ev.location ? `<a href="${escHtml(mapsUrl)}" target="_blank" rel="noopener" style="text-decoration:none"><span class="tag tag-location">📍 ${escHtml(ev.location)}</span></a>` : '';
   const regionBadge = ev.region  ? `<span class="tag tag-region">${REGION_EMOJI[ev.region] || '📌'} ${escHtml(ev.region)}</span>` : '';
   const srcBadge    = `<span class="tag tag-source">🔗 ${escHtml(ev.source)}</span>`;
   const desc        = ev.description ? `<div class="event-desc">${escHtml(ev.description)}</div>` : '';
-  const gcalUrl     = buildGcalUrl(ev);
   return `
     <div class="event-card" data-source="${escHtml(ev.source)}" data-id="${escHtml(ev.id)}">
       <div class="event-header">
@@ -835,10 +814,7 @@ function eventCard(ev) {
       </div>
       <div class="event-meta">${dateBadge}${regionBadge}${locBadge}${srcBadge}</div>
       ${desc}
-      <div class="event-actions">
-        <a class="btn-gcal" href="${gcalUrl}" target="_blank" rel="noopener" title="Add to Google Calendar">📅 Add to Calendar</a>
-        <button class="btn-delete" onclick="deleteEvent('${ev.id}')" title="Remove">✕</button>
-      </div>
+      <button class="btn-delete" onclick="deleteEvent('${ev.id}')" title="Remove">✕</button>
     </div>`;
 }
 
