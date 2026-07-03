@@ -791,8 +791,8 @@ async function scrapeAll() {
 }
 
 // Run on startup + every 6 hours
-scrapeAll();
-cron.schedule('0 */6 * * *', scrapeAll);
+scrapeAll().catch(err => console.error('Startup scrape failed:', err.message));
+cron.schedule('0 */6 * * *', () => scrapeAll().catch(err => console.error('Scheduled scrape failed:', err.message)));
 
 // ── Content moderation ────────────────────────────────────────────────────────
 
