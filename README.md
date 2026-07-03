@@ -53,3 +53,4 @@ Open [http://localhost:3000](http://localhost:3000).
 |---|---|---|
 | `DATABASE_URL` | PostgreSQL connection string | local `funtasticweekend` db |
 | `PORT` | Port to listen on | `3000` |
+| `ANTHROPIC_API_KEY` | Claude API key for content moderation on user-submitted URLs | (moderation skipped if unset) |
