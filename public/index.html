@@ -162,7 +162,13 @@
     gap: 24px;
   }
   @media (max-width: 768px) {
-    .main-wrap { grid-template-columns: 1fr; }
+    .main-wrap { grid-template-columns: 1fr; padding: 12px; }
+    header { padding: 18px 12px 40px; }
+    .deco-strip { display: none; }
+    .controls { padding: 10px 12px; gap: 8px; }
+    .controls input, .controls select { font-size: 0.85rem; padding: 6px 10px; }
+    .event-card { padding: 12px 14px; }
+    .tag { font-size: 0.68rem; padding: 2px 8px; }
   }
 
   /* ── Events list ── */
@@ -294,6 +300,10 @@
     color: var(--ink);
   }
   .btn-delete:hover { opacity: 0.75; }
+
+  @media (hover: none) {
+    .btn-gcal { opacity: 1; }
+  }
 
   /* ── Sidebar ── */
   .sidebar { display: flex; flex-direction: column; gap: 20px; }
@@ -812,7 +822,8 @@ function eventCard(ev) {
     : escHtml(ev.title);
   const REGION_EMOJI = {'San Francisco':'🌉','North Bay':'🌲','East Bay':'🏔️','Peninsula':'🌊','South Bay':'☀️'};
   const dateBadge   = ev.date    ? `<span class="tag tag-date">📅 ${ev.date}</span>` : '';
-  const locBadge    = ev.location? `<span class="tag tag-location">📍 ${escHtml(ev.location)}</span>` : '';
+  const mapsUrl     = ev.location ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ev.location)}` : null;
+  const locBadge    = ev.location ? `<a href="${escHtml(mapsUrl)}" target="_blank" rel="noopener" style="text-decoration:none"><span class="tag tag-location">📍 ${escHtml(ev.location)}</span></a>` : '';
   const regionBadge = ev.region  ? `<span class="tag tag-region">${REGION_EMOJI[ev.region] || '📌'} ${escHtml(ev.region)}</span>` : '';
   const srcBadge    = `<span class="tag tag-source">🔗 ${escHtml(ev.source)}</span>`;
   const desc        = ev.description ? `<div class="event-desc">${escHtml(ev.description)}</div>` : '';
