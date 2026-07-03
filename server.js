@@ -441,7 +441,7 @@ const REGION_KEYWORDS = {
     ', sf,', ', sf ', '(sf)', ' sf, ca', 'sfpl', 'sfmoma',
     'soma', 'south of market',
     'mission district', 'mission dolores', 'dolores park', 'dolores st',
-    'castro', 'noe valley', 'glen park', 'bernal',
+    'castro', 'noe valley', 'glen park, sf', 'glen park, san francisco', 'bernal',
     'sunset district', 'inner sunset', 'outer sunset',
     'richmond district', 'inner richmond', 'outer richmond',
     'golden gate park', 'golden gate valley', 'panhandle', 'haight',
