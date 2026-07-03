@@ -767,7 +767,11 @@ function renderEvents(events, nextEvent) {
           Jump to next available: ${escHtml(nextEvent.title)} — ${label}
         </a></div>`;
     } else {
-      listEl.innerHTML = '<div class="no-events">No upcoming events found! Try different filters 🔍</div>';
+      const noEventsEl = document.createElement('div');
+      noEventsEl.className = 'no-events';
+      const dateVal = document.getElementById('date-filter').value;
+      noEventsEl.textContent = dateVal ? 'No events found for that day!' : 'No upcoming events found! Try different filters 🔍';
+      listEl.appendChild(noEventsEl);
     }
     return;
   }

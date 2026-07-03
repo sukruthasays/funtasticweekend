@@ -905,8 +905,9 @@ app.get('/api/events', async (req, res) => {
     const today = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
 
     const { date, weekend, source, region, q } = req.query;
-    const params = [today];
-    const conditions = ['(date IS NULL OR date >= $1)'];
+    // When a specific date is selected, show all events for that date regardless of whether it's in the past
+    const params = date ? [] : [today];
+    const conditions = date ? [] : ['(date IS NULL OR date >= $1)'];
 
     if (q) {
       params.push(`%${q.toLowerCase()}%`);
