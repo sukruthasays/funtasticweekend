@@ -757,7 +757,7 @@ async function loadEvents() {
 function renderEvents(events, nextEvent) {
   const countEl = document.getElementById('events-count');
   const listEl  = document.getElementById('events-list');
-  countEl.textContent = `🎡 ${events.length} event${events.length !== 1 ? 's' : ''} found!`;
+  countEl.textContent = `🎡 ${events.length} upcoming event${events.length !== 1 ? 's' : ''} found!`;
 
   if (!events.length) {
     if (nextEvent) {
