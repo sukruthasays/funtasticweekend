@@ -745,7 +745,12 @@ async function scrapeLawrenceHall() {
 
 // ── Scrape all sources ────────────────────────────────────────────────────────
 
+let scrapeInProgress = false;
+
 async function scrapeAll() {
+  if (scrapeInProgress) { console.log('Scrape already in progress, skipping.'); return []; }
+  scrapeInProgress = true;
+  try {
   console.log('Scraping all sources…');
   const [r, m, f, e, s, d, x, fas, ch, lhs] = await Promise.allSettled([
     scrapeRonnie(), scrapeMarinMommies(), scrapeFuncheap(), scrape510Families(), scrapeSFPL(), scrapeDSE(), scrapeExploratorium(), scrapeFamilyAdventureSquad(), scrapeChabot(), scrapeLawrenceHall()
@@ -788,6 +793,9 @@ async function scrapeAll() {
   lastScraped = new Date().toISOString();
   console.log(`Scraped ${all.length} events.`);
   return all;
+  } finally {
+    scrapeInProgress = false;
+  }
 }
 
 // Run on startup + every 6 hours
