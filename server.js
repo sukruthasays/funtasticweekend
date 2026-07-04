@@ -743,6 +743,60 @@ async function scrapeLawrenceHall() {
   return events;
 }
 
+async function scrapeTechInteractive() {
+  const events = [];
+  const seen = new Set();
+  const today = new Date().toISOString().split('T')[0];
+  const BASE = 'https://www.thetech.org';
+  try {
+    const { data } = await axios.get(`${BASE}/explore/upcoming-events/`, { headers: HEADERS, timeout: 15000 });
+    const $ = cheerio.load(data);
+    $('.card-grid-item').each((_, el) => {
+      try {
+        const titleEl = $(el).find('.card-item-link').first();
+        const title = titleEl.text().trim();
+        const url = titleEl.attr('href') || '';
+        if (!title || seen.has(url)) return;
+        // Skip 21+ adult events
+        if (/21\+/i.test(title)) return;
+        seen.add(url);
+
+        // Date: first span.small inside p.small.bold is the start date
+        const datePara = $(el).find('p.small.bold').first();
+        const dateSpans = datePara.find('span.small');
+        const dateText = dateSpans.first().text().trim();
+        const date = parseDate(dateText);
+        if (!date || date < today) return;
+
+        const locationRaw = $(el).find('p.italic').first().text().trim();
+        const location = locationRaw ? `${locationRaw}, 201 S Market St, San Jose, CA 95113` : '201 S Market St, San Jose, CA 95113';
+        const descParts = [];
+        $(el).find('.card-item-content p').each((_, p) => {
+          const pEl = $(p);
+          if (pEl.hasClass('small') || pEl.hasClass('italic')) return;
+          const text = pEl.text().trim();
+          if (text) descParts.push(text);
+        });
+        const description = descParts.join(' ').slice(0, 200);
+
+        events.push({
+          id: makeId(),
+          source: 'The Tech Interactive',
+          title,
+          url,
+          description,
+          dateText,
+          date,
+          location,
+          region: 'South Bay',
+          category: 'Science & Education',
+        });
+      } catch {}
+    });
+  } catch (e) { console.error('scrapeTechInteractive:', e.message); }
+  return events;
+}
+
 // ── Scrape all sources ────────────────────────────────────────────────────────
 
 let scrapeInProgress = false;
@@ -752,8 +806,8 @@ async function scrapeAll() {
   scrapeInProgress = true;
   try {
   console.log('Scraping all sources…');
-  const [r, m, f, e, s, d, x, fas, ch, lhs] = await Promise.allSettled([
-    scrapeRonnie(), scrapeMarinMommies(), scrapeFuncheap(), scrape510Families(), scrapeSFPL(), scrapeDSE(), scrapeExploratorium(), scrapeFamilyAdventureSquad(), scrapeChabot(), scrapeLawrenceHall()
+  const [r, m, f, e, s, d, x, fas, ch, lhs, tti] = await Promise.allSettled([
+    scrapeRonnie(), scrapeMarinMommies(), scrapeFuncheap(), scrape510Families(), scrapeSFPL(), scrapeDSE(), scrapeExploratorium(), scrapeFamilyAdventureSquad(), scrapeChabot(), scrapeLawrenceHall(), scrapeTechInteractive()
   ]);
   const all = [
     ...(r.status === 'fulfilled' ? r.value : []),
@@ -766,6 +820,7 @@ async function scrapeAll() {
     ...(fas.status === 'fulfilled' ? fas.value : []),
     ...(ch.status === 'fulfilled' ? ch.value : []),
     ...(lhs.status === 'fulfilled' ? lhs.value : []),
+    ...(tti.status === 'fulfilled' ? tti.value : []),
   ];
 
   // Replace all scraped events in one transaction
