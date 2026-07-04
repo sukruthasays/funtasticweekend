@@ -761,12 +761,15 @@ async function scrapeTechInteractive() {
         if (/21\+/i.test(title)) return;
         seen.add(url);
 
-        // Date: first span.small inside p.small.bold is the start date
+        // Date: first span.small is start, third span.small (inside the range span) is end
         const datePara = $(el).find('p.small.bold').first();
         const dateSpans = datePara.find('span.small');
         const dateText = dateSpans.first().text().trim();
         const date = parseDate(dateText);
-        if (!date || date < today) return;
+        // For multi-day events use end date for staleness check so ongoing events aren't excluded
+        const endDateText = dateSpans.eq(2).text().trim();
+        const endDate = parseDate(endDateText) || date;
+        if (!date || endDate < today) return;
 
         const locationRaw = $(el).find('p.italic').first().text().trim();
         const location = locationRaw ? `${locationRaw}, 201 S Market St, San Jose, CA 95113` : '201 S Market St, San Jose, CA 95113';
