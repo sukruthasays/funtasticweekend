@@ -23,6 +23,56 @@ function makeId() {
 
 let lastScraped = null;
 
+// Adds the time column to existing databases; queries that touch it await this first.
+const schemaReady = db.query(`ALTER TABLE events ADD COLUMN IF NOT EXISTS time_text TEXT`);
+schemaReady.catch(err => console.error('Schema migration failed:', err.message));
+
+// ── Time helpers ────────────────────────────────────────────────────────────
+// Times are stored as display text ("9:00 AM" or "9:00 AM – 11:00 AM") in the
+// event's own local time, so they are read from the source string, never via Date().
+
+function fmtClock(h, m) {
+  const suffix = h >= 12 ? 'PM' : 'AM';
+  return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${suffix}`;
+}
+
+// "2026-11-19T15:45:00-08:00" or "2026-11-19 15:45" → "3:45 PM". Midnight is treated
+// as "no time given", since date-only values are often serialized as 00:00.
+function clockFromIso(iso) {
+  const m = String(iso || '').match(/^\d{4}-\d{2}-\d{2}[T ](\d{2}):(\d{2})/);
+  if (!m) return null;
+  const h = parseInt(m[1], 10), min = parseInt(m[2], 10);
+  if (h === 0 && min === 0) return null;
+  return fmtClock(h, min);
+}
+
+// Start/end ISO strings → "3:45 PM – 4:45 PM"; end is shown only when it's on the same day.
+function timeRangeFromIso(startIso, endIso) {
+  const start = clockFromIso(startIso);
+  if (!start) return null;
+  const end = clockFromIso(endIso);
+  const sameDay = endIso && String(endIso).slice(0, 10) === String(startIso).slice(0, 10);
+  return end && sameDay && end !== start ? `${start} – ${end}` : start;
+}
+
+// Free text like "9:00 am", "10:00AM", "5pm" → "9:00 AM". Returns null if no am/pm clock.
+function clockFromText(text) {
+  const m = String(text || '').match(/(\d{1,2})(?::(\d{2}))?\s*([ap])\.?m\b/i);
+  if (!m) return null;
+  let h = parseInt(m[1], 10) % 12;
+  if (m[3].toLowerCase() === 'p') h += 12;
+  return fmtClock(h, parseInt(m[2] || '0', 10));
+}
+
+// "9:00 am – 11:00 am" → "9:00 AM – 11:00 AM"
+function timeRangeFromText(text) {
+  const [a, b] = String(text || '').split(/\s*[–—-]\s*/);
+  const start = clockFromText(a);
+  if (!start) return null;
+  const end = clockFromText(b);
+  return end && end !== start ? `${start} – ${end}` : start;
+}
+
 // ── Scrapers ────────────────────────────────────────────────────────────────
 
 const HEADERS = {
@@ -55,11 +105,15 @@ async function scrapeRonnie() {
       // fall back to venue name only if no map address is available.
       const fullAddr   = mapAddr || venueName || 'Bay Area';
       const desc       = $(el).find('.eventlist-excerpt p').first().text().trim().slice(0, 200);
+      // Squarespace renders start/end as separate <time> elements (selectors unverified: page currently 404s)
+      const startTime  = clockFromText($(el).find('.eventlist-meta-time .event-time-12hr-start').first().text());
+      const endTime    = clockFromText($(el).find('.eventlist-meta-time .event-time-12hr-end').first().text());
+      const time       = startTime && endTime && endTime !== startTime ? `${startTime} – ${endTime}` : startTime;
 
       if (title) {
         events.push({
           id: makeId(), source: 'Ronnies Awesome List', title, url,
-          description: desc, dateText, date: parseDate(dateText),
+          description: desc, dateText, date: parseDate(dateText), time,
           location: fullAddr,
           region: normalizeRegion(fullAddr, 'Ronnies Awesome List'),
           category: 'Kids & Family',
@@ -89,6 +143,7 @@ async function scrapeMarinMommiesDay(dateStr) {
         events.push({
           id: makeId(), source: 'Marin Mommies', title, url,
           description: desc, dateText: isoDate, date: isoDate,
+          time: clockFromIso(timeEl.attr('content')),
           location: location || 'Marin County', region: normalizeRegion(location, 'Marin Mommies'),
           category: 'Kids & Family',
         });
@@ -139,6 +194,7 @@ function parseFuncheapPage($) {
       events.push({
         id: makeId(), source: 'SF Funcheap', title, url,
         description: desc, dateText: isoDate, date: isoDate,
+        time: clockFromIso(metaEl.attr('data-event-date')),
         location: location || 'San Francisco', region,
         category: 'Kids & Family',
       });
@@ -181,6 +237,7 @@ async function scrapeDSE() {
           events.push({
             id: makeId(), source: 'DSE Runners', title, url,
             description: desc, dateText: datePart, date: isoDate,
+            time: timeRangeFromText(timeText.split('@')[1]),
             location, region: normalizeRegion(location, 'DSE Runners'),
             category: 'Running',
           });
@@ -263,6 +320,7 @@ async function scrapeSFPLDay(dateStr) {
       const path     = titleAnchor.attr('href') || '';
       const url      = path ? 'https://sfpl.org' + path : 'https://sfpl.org/events';
       const dateText = $(el).find('.date-display-range').text().trim();
+      const [startIso, endIso] = ($(el).find('.event__date time').attr('datetime') || '').split('/');
       // Parse date from path (/events/YYYY/MM/DD/slug) or dateText
       const pathDate = path.match(/\/events\/(\d{4}\/\d{2}\/\d{2})\//);
       const isoDate  = pathDate ? pathDate[1].replace(/\//g, '-') : dateStr;
@@ -273,6 +331,7 @@ async function scrapeSFPLDay(dateStr) {
         events.push({
           id: makeId(), source: 'SFPL Kids Events', title, url,
           description: desc, dateText, date: isoDate,
+          time: timeRangeFromIso(startIso, endIso),
           location: loc, region: normalizeRegion(loc, 'SFPL Kids Events'),
           category: 'Library / Education',
         });
@@ -302,6 +361,7 @@ async function scrapeExploratorium() {
         events.push({
           id: makeId(), source: 'Exploratorium', title, url,
           description: desc, dateText, date,
+          time: clockFromIso(isoRaw),
           location: 'Pier 15, San Francisco, CA 94111',
           region: 'San Francisco',
           category: 'Kids & Family',
@@ -655,6 +715,7 @@ async function scrapeChabot() {
               description: desc,
               dateText: date,
               date,
+              time: timeRangeFromIso(item.startDate, item.endDate),
               location: '10000 Skyline Blvd, Oakland, CA 94619',
               region: 'East Bay',
               category: 'Science & Education',
@@ -700,7 +761,7 @@ async function scrapeLawrenceHall() {
       const results = await Promise.allSettled(batch.map(async ev => {
         const { data: html } = await axios.get(ev.link, { headers: HEADERS, timeout: 15000 });
         const $ = cheerio.load(html);
-        let eventDate = null;
+        let eventDate = null, eventTime = null;
         $('script[type="application/ld+json"]').each((_, el) => {
           try {
             const obj = JSON.parse($(el).html());
@@ -708,17 +769,18 @@ async function scrapeLawrenceHall() {
             for (const item of items) {
               if (item['@type'] === 'Event' && item.startDate) {
                 eventDate = item.startDate.slice(0, 10);
+                eventTime = timeRangeFromIso(item.startDate, item.endDate);
                 return false;
               }
             }
           } catch {}
         });
-        return { ev, eventDate };
+        return { ev, eventDate, eventTime };
       }));
 
       for (const r of results) {
         if (r.status !== 'fulfilled') continue;
-        const { ev, eventDate } = r.value;
+        const { ev, eventDate, eventTime } = r.value;
         if (!eventDate || eventDate < today) continue;
         const title = ev.title?.rendered?.replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').replace(/&#\d+;/g, c => {
           const m = c.match(/&#(\d+);/); return m ? String.fromCharCode(parseInt(m[1])) : c;
@@ -733,6 +795,7 @@ async function scrapeLawrenceHall() {
           description: desc,
           dateText: eventDate,
           date: eventDate,
+          time: eventTime,
           location: '1 Centennial Dr, Berkeley, CA 94720',
           region: 'East Bay',
           category: 'Science & Education',
@@ -770,6 +833,11 @@ async function scrapeTechInteractive() {
         const endDateText = dateSpans.eq(2).text().trim();
         const endDate = parseDate(endDateText) || date;
         if (!date || endDate < today) return;
+        const startTime = clockFromText(dateSpans.eq(1).text());
+        const endTime   = clockFromText(dateSpans.eq(3).text());
+        // Multi-day runs list the end time of the last day, so only show it for single-day events
+        const time = startTime && endTime && endDate === date && endTime !== startTime
+          ? `${startTime} – ${endTime}` : startTime;
 
         const locationRaw = $(el).find('p.italic').first().text().trim();
         const location = locationRaw ? `${locationRaw}, 201 S Market St, San Jose, CA 95113` : '201 S Market St, San Jose, CA 95113';
@@ -790,6 +858,7 @@ async function scrapeTechInteractive() {
           description,
           dateText,
           date,
+          time,
           location,
           region: 'South Bay',
           category: 'Science & Education',
@@ -827,16 +896,17 @@ async function scrapeAll() {
   ];
 
   // Replace all scraped events in one transaction
+  await schemaReady;
   const client = await db.connect();
   try {
     await client.query('BEGIN');
     await client.query(`DELETE FROM events WHERE is_manual = FALSE`);
     for (const ev of all) {
       await client.query(
-        `INSERT INTO events (id,source,title,url,description,date_text,date,location,region,category,is_manual)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,FALSE)`,
+        `INSERT INTO events (id,source,title,url,description,date_text,date,time_text,location,region,category,is_manual)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,FALSE)`,
         [ev.id, ev.source, ev.title, ev.url || null, ev.description || null,
-         ev.dateText || null, ev.date || null, ev.location || null,
+         ev.dateText || null, ev.date || null, ev.time || null, ev.location || null,
          ev.region || null, ev.category || null]
       );
     }
@@ -917,6 +987,7 @@ async function scrapeEventUrl(url) {
     return {
       title:       jsonld.name || '',
       date,
+      time:        timeRangeFromIso(startRaw, jsonld.endDate),
       location:    fullAddr || loc,
       description: jsonld.description || '',
       url,
@@ -980,11 +1051,12 @@ app.get('/api/events', async (req, res) => {
     }
 
     const sql = `SELECT id, source, title, url, description, date_text AS "dateText",
-                        TO_CHAR(date, 'YYYY-MM-DD') AS date, location, region, category, is_manual AS manual
+                        TO_CHAR(date, 'YYYY-MM-DD') AS date, time_text AS time, location, region, category, is_manual AS manual
                  FROM events
                  WHERE ${conditions.join(' AND ')}
                  ORDER BY date ASC NULLS LAST, title ASC`;
 
+    await schemaReady;
     const { rows } = await db.query(sql, params);
     res.json({ events: rows.filter(e => !/canceled/i.test(e.title)), lastScraped });
   } catch (err) {
@@ -1047,16 +1119,18 @@ app.post('/api/scrape-url', async (req, res) => {
       id: makeId(), source: 'Manual',
       title: fields.title,
       date: fields.date || null,
+      time: fields.time || null,
       location: loc,
       region: normalizeRegion(loc, 'Manual'),
       description: fields.description || '',
       url: fields.url,
       category: 'Kids & Family',
     };
+    await schemaReady;
     await db.query(
-      `INSERT INTO events (id,source,title,url,description,date_text,date,location,region,category,is_manual)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,TRUE)`,
-      [ev.id, ev.source, ev.title, ev.url, ev.description, null, ev.date, ev.location, ev.region, ev.category]
+      `INSERT INTO events (id,source,title,url,description,date_text,date,time_text,location,region,category,is_manual)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,TRUE)`,
+      [ev.id, ev.source, ev.title, ev.url, ev.description, null, ev.date, ev.time, ev.location, ev.region, ev.category]
     );
     res.json(ev);
   } catch (err) {

@@ -633,7 +633,7 @@ function eventCard(ev) {
   const REGION_EMOJI = {'San Francisco':'🌉','North Bay':'🌲','East Bay':'🏔️','Peninsula':'🌊','South Bay':'☀️'};
   const gcalUrl     = buildGcalUrl(ev);
   const dateBadge   = ev.date
-    ? `<a href="${escHtml(gcalUrl)}" target="_blank" rel="noopener" title="Add to Google Calendar" style="text-decoration:none"><span class="tag tag-date">📅 ${ev.date}</span></a>`
+    ? `<a href="${escHtml(gcalUrl)}" target="_blank" rel="noopener" title="Add to Google Calendar" style="text-decoration:none"><span class="tag tag-date">📅 ${ev.date}${ev.time ? ' · ' + escHtml(ev.time) : ''}</span></a>`
     : '';
   const mapsUrl     = ev.location ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ev.location)}` : null;
   const locBadge    = ev.location ? `<a href="${escHtml(mapsUrl)}" target="_blank" rel="noopener" style="text-decoration:none"><span class="tag tag-location">📍 ${escHtml(ev.location)}</span></a>` : '';

@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS events (
   description TEXT,
   date_text   TEXT,
   date        DATE,
+  time_text   TEXT,
   location    TEXT,
   region      TEXT,
   category    TEXT,
